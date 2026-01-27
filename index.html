@@ -12,7 +12,9 @@
         :root { --primary: #3e9cbf; --bg: #f4f7f6; --danger: #e74c3c; --success: #27ae60; --text: #2c3e50; --card-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); -webkit-tap-highlight-color: transparent; }
         .container { max-width: 800px; margin: 0 auto; padding-bottom: 60px; }
-        .card { background: white; padding: 24px; border-radius: 16px; box-shadow: var(--card-shadow); margin-bottom: 20px; transition: transform 0.2s; }
+        
+        /* Card 基础样式 */
+        .card { background: white; padding: 24px; border-radius: 16px; box-shadow: var(--card-shadow); margin-bottom: 20px; transition: transform 0.2s; box-sizing: border-box; width: 100%; }
         
         h1 { font-size: 1.8rem; letter-spacing: -0.5px; margin-bottom: 30px; }
         h2 { font-size: 1.2rem; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
@@ -37,22 +39,23 @@
             border-radius: 15px; font-size: 13px; color: #666; transition: all 0.2s; display: flex; align-items: center; gap: 4px;
         }
         .icon-btn:hover { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .icon-btn.logout:hover { color: var(--danger); }
         .unit-pill { 
             background: #2c3e50; color: white; padding: 8px 16px; border-radius: 30px; 
             font-size: 13px; cursor: pointer; font-weight: 600; border: none;
             transition: transform 0.1s; display: flex; align-items: center; gap: 6px; white-space: nowrap;
         }
-        .unit-pill:active { transform: scale(0.95); }
 
         /* --- Form --- */
-        .form-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; align-items: flex-end; }
+        .form-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; align-items: flex-end; width: 100%; }
         .input-box { display: flex; flex-direction: column; flex: 1; min-width: 140px; }
+        
         label { font-size: 12px; margin-bottom: 6px; color: #666; font-weight: 600; margin-left: 4px; }
+        
+        /* 核心修复：增加 max-width: 100% 防止溢出 */
         input, select { 
             padding: 12px 15px; border: 1px solid #e1e4e8; border-radius: 12px; 
             font-size: 15px; outline: none; transition: 0.2s; background: #fcfcfc;
-            width: 100%; box-sizing: border-box;
+            width: 100%; box-sizing: border-box; max-width: 100%;
         }
         input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(62, 156, 191, 0.1); }
         input:disabled { background: #eee; color: #999; cursor: not-allowed; border-color: #eee; }
@@ -62,7 +65,6 @@
             border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 15px;
             box-shadow: 0 4px 6px rgba(62, 156, 191, 0.2); transition: 0.2s; white-space: nowrap;
         }
-        button.primary-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 12px rgba(62, 156, 191, 0.3); }
 
         /* Color Picker */
         .color-grid { display: flex; gap: 12px; justify-content: center; margin-top: 5px; flex-wrap: wrap; }
@@ -94,7 +96,6 @@
         .btn-cancel { background: #f0f2f5; color: #666; }
         .btn-save { background: var(--primary); color: white; }
         
-        /* Helpers */
         .view { display: none; opacity: 0; transition: opacity 0.3s; }
         .view.active { display: block; opacity: 1; }
         #loading { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: none; justify-content: center; align-items: center; z-index: 2000; flex-direction: column; gap: 15px; font-weight: bold; color: var(--primary); }
@@ -105,16 +106,22 @@
         .btn-edit { background: #e3f2fd; color: #1976d2; }
         .btn-del { background: #ffebee; color: #c62828; }
 
-        /* Responsive */
+        /* --- 响应式核心修复 --- */
         @media (max-width: 600px) {
             body { padding: 10px; }
             .container { padding-bottom: 40px; }
             .card { padding: 16px; margin-bottom: 15px; }
+            
             .top-bar { flex-direction: column; align-items: stretch; gap: 15px; border-radius: 16px; padding: 15px; }
             .user-section { justify-content: space-between; width: 100%; }
             .unit-pill { width: 100%; justify-content: center; }
+            
             .form-row { flex-direction: column; align-items: stretch; gap: 15px; }
-            .input-box { width: 100%; }
+            
+            /* 关键修复：强制重置 input-box 宽度并取消最小宽度限制 */
+            .input-box { width: 100%; min-width: 0; }
+            
+            /* 确保按钮也满宽 */
             button.primary-btn { width: 100%; }
             .modal-card { padding: 20px; }
         }
@@ -238,7 +245,7 @@
         <div class="modal-header">✏️ 修改个人资料</div>
         
         <div class="input-box" style="margin-bottom: 18px;">
-            <label>用户名 (修改需查重)</label>
+            <label>用户名</label>
             <input type="text" id="editUsername" placeholder="输入用户名">
         </div>
 
@@ -247,7 +254,7 @@
             <input type="password" id="editPass" placeholder="输入新密码">
         </div>
         <div class="input-box" style="margin-bottom: 18px;">
-            <label>初始体重 (<span class="unit-text">公斤</span>) - <small>不可修改</small></label>
+            <label>初始体重 (<span class="unit-text">公斤</span>) - <small>请联系洋修改</small></label>
             <input type="number" id="editInitialWeight" disabled style="background:#f0f0f0;">
         </div>
         <div class="input-box" style="margin-bottom: 20px;">
@@ -445,7 +452,7 @@
         
         const wInput = document.getElementById('editInitialWeight');
         wInput.value = displayInitial.toFixed(2);
-        wInput.disabled = true; // 确保禁用
+        wInput.disabled = true;
 
         await renderColorPalette('editColorPalette', 'editSelectedColor', currentUser.color);
         document.getElementById('profileModal').classList.add('active');
@@ -455,8 +462,7 @@
         const newName = document.getElementById('editUsername').value.trim();
         const pass = document.getElementById('editPass').value;
         const color = document.getElementById('editSelectedColor').value;
-        // 不读取也不更新 initial_weight
-
+        
         if (!newName) return alert("用户名不能为空");
 
         const updates = {};
@@ -555,7 +561,7 @@
                 </tr>`;
         });
 
-        // 排行榜：Current取最新，Initial取数据库存的
+        // 排行榜
         const userStats = {};
         Object.values(allUsers).forEach(u => {
             userStats[u.id] = { name: u.username, initial: u.initial_weight, current: u.initial_weight };
@@ -580,36 +586,24 @@
                 </tr>`;
         });
 
-        // === 修正后的图表逻辑 ===
+        // 图表
         const ctx = document.getElementById('weightChart').getContext('2d');
-        
-        // 1. 获取所有记录的日期
         let rawDateStrings = records.map(r => dayjs(r.record_date).format('YYYY-MM-DD'));
         
-        // 2. 将 1月26日 加入日期列表（如果不重复）
         if (!rawDateStrings.includes(CHALLENGE_START_DATE)) {
             rawDateStrings.push(CHALLENGE_START_DATE);
         }
         
-        // 3. 统一排序（这样 26号之前的日期会排在前面，26号在中间/后面）
         const uniqueDates = [...new Set(rawDateStrings)].sort();
         const labels = uniqueDates.map(d => dayjs(d).format('MM-DD'));
-
-        // 4. 判断点位是否是 1月26日
         const isStartPoint = uniqueDates.map(d => d === CHALLENGE_START_DATE);
 
         const datasets = Object.values(allUsers).map(u => {
             const uRecs = records.filter(r => r.user_id === u.id);
-            
             const data = uniqueDates.map(dateStr => {
-                // 核心逻辑：
-                // 如果是 1月26日，无论该日是否有打卡记录，强制使用【初始体重】显示
-                // 这确保了图表上这一天显示的是比赛的“基准值”
                 if (dateStr === CHALLENGE_START_DATE) {
                     return globalUnit === 'KG' ? u.initial_weight : u.initial_weight * 2;
                 }
-                
-                // 其他日期：查找当日最后一条记录
                 const dailyRecs = uRecs.filter(r => dayjs(r.record_date).format('YYYY-MM-DD') === dateStr);
                 if (dailyRecs.length > 0) {
                     const lastRecord = dailyRecs[dailyRecs.length - 1];
@@ -625,10 +619,9 @@
                 backgroundColor: u.color,
                 spanGaps: true,
                 tension: 0.3,
-                // 仅针对 1月26日 那个点进行放大和改变形状
                 pointRadius: isStartPoint.map(isStart => isStart ? 8 : 4),
                 pointHoverRadius: isStartPoint.map(isStart => isStart ? 10 : 6),
-                pointStyle: isStartPoint.map(isStart => isStart ? 'rectRot' : 'circle'), // 菱形突出
+                pointStyle: isStartPoint.map(isStart => isStart ? 'rectRot' : 'circle'), 
                 borderWidth: 2
             };
         });
@@ -645,10 +638,7 @@
                         callbacks: {
                             label: function(context) {
                                 let label = context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' ' + unitText;
-                                // Tooltip 提示
-                                if (context.label === '01-26') {
-                                    label += ' (起始体重)';
-                                }
+                                if (context.label === '01-26') label += ' (起始体重)';
                                 return label;
                             }
                         }
