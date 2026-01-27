@@ -2,39 +2,35 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>多节干减重挑战赛 Ultimate</title>
-<script src="./js/chart.js"></script>
-<script src="./js/supabase.js"></script>
-<script src="./js/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     
     <style>
         :root { --primary: #3e9cbf; --bg: #f4f7f6; --danger: #e74c3c; --success: #27ae60; --text: #2c3e50; --card-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); -webkit-tap-highlight-color: transparent; }
         .container { max-width: 800px; margin: 0 auto; padding-bottom: 60px; }
         .card { background: white; padding: 24px; border-radius: 16px; box-shadow: var(--card-shadow); margin-bottom: 20px; transition: transform 0.2s; }
         
-        /* 标题优化 */
         h1 { font-size: 1.8rem; letter-spacing: -0.5px; margin-bottom: 30px; }
         h2 { font-size: 1.2rem; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
-        /* 顶部栏 UI 优化 */
+        /* --- Top Bar --- */
         .top-bar { 
             display: flex; justify-content: space-between; align-items: center; 
             margin-bottom: 25px; background: white; padding: 12px 20px; 
             border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); 
+            flex-wrap: wrap;
         }
-        
-        /* 用户区域样式 */
         .user-section { display: flex; align-items: center; gap: 12px; }
         .user-avatar { 
             width: 36px; height: 36px; border-radius: 50%; color: white; 
             font-weight: bold; display: flex; align-items: center; justify-content: center; 
-            font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-transform: uppercase;
+            font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-transform: uppercase; flex-shrink: 0;
         }
-        .user-name { font-weight: 700; font-size: 15px; color: #333; margin-right: 5px; }
-        
-        /* 图标按钮组 */
+        .user-name { font-weight: 700; font-size: 15px; color: #333; margin-right: 5px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .action-group { display: flex; gap: 4px; background: #f0f2f5; padding: 4px; border-radius: 20px; }
         .icon-btn { 
             background: transparent; border: none; cursor: pointer; padding: 6px 10px; 
@@ -42,24 +38,24 @@
         }
         .icon-btn:hover { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .icon-btn.logout:hover { color: var(--danger); }
-
-        /* 单位切换开关 */
         .unit-pill { 
             background: #2c3e50; color: white; padding: 8px 16px; border-radius: 30px; 
             font-size: 13px; cursor: pointer; font-weight: 600; border: none;
-            transition: transform 0.1s; display: flex; align-items: center; gap: 6px;
+            transition: transform 0.1s; display: flex; align-items: center; gap: 6px; white-space: nowrap;
         }
         .unit-pill:active { transform: scale(0.95); }
 
-        /* 表单样式 */
+        /* --- Form --- */
         .form-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; align-items: flex-end; }
         .input-box { display: flex; flex-direction: column; flex: 1; min-width: 140px; }
         label { font-size: 12px; margin-bottom: 6px; color: #666; font-weight: 600; margin-left: 4px; }
         input, select { 
             padding: 12px 15px; border: 1px solid #e1e4e8; border-radius: 12px; 
             font-size: 15px; outline: none; transition: 0.2s; background: #fcfcfc;
+            width: 100%; box-sizing: border-box;
         }
         input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(62, 156, 191, 0.1); }
+        input:disabled { background: #eee; color: #999; cursor: not-allowed; border-color: #eee; }
         
         button.primary-btn { 
             padding: 12px 24px; background: var(--primary); color: white; border: none; 
@@ -68,27 +64,29 @@
         }
         button.primary-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 12px rgba(62, 156, 191, 0.3); }
 
-        /* 颜色选择器 */
+        /* Color Picker */
         .color-grid { display: flex; gap: 12px; justify-content: center; margin-top: 5px; flex-wrap: wrap; }
         .color-option { width: 34px; height: 34px; border-radius: 50%; cursor: pointer; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.2s; position: relative; }
         .color-option.selected { transform: scale(1.15); box-shadow: 0 0 0 2px #333; }
         .color-option.disabled { opacity: 0.15; cursor: not-allowed; filter: grayscale(1); }
         .color-option.disabled::after { content: '×'; position: absolute; inset:0; display:flex; justify-content:center; align-items:center; font-weight:bold; color:#000; font-size:18px;}
 
-        /* 表格优化 */
-        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 10px; }
-        th { text-align: left; padding: 15px; color: #8898aa; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #eee; }
-        td { padding: 15px; border-bottom: 1px solid #f5f5f5; color: #525f7f; font-size: 15px; }
+        /* Table */
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 10px; min-width: 350px; }
+        th { text-align: left; padding: 15px; color: #8898aa; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #eee; white-space: nowrap; }
+        td { padding: 15px; border-bottom: 1px solid #f5f5f5; color: #525f7f; font-size: 15px; white-space: nowrap; }
         tr:last-child td { border-bottom: none; }
+        
         .rank-badge { display: inline-block; width: 24px; height: 24px; line-height: 24px; text-align: center; border-radius: 50%; background: #eee; font-size: 12px; font-weight: bold; color: #666; }
         .rank-1 .rank-badge { background: #ffd700; color: #fff; box-shadow: 0 2px 5px rgba(255, 215, 0, 0.4); }
         .rank-2 .rank-badge { background: #c0c0c0; color: #fff; }
         .rank-3 .rank-badge { background: #cd7f32; color: #fff; }
 
-        /* 弹窗 */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.2s; }
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.2s; padding: 20px; }
         .modal-overlay.active { display: flex; opacity: 1; }
-        .modal-card { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 420px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); transform: scale(0.9); transition: transform 0.2s; }
+        .modal-card { background: white; padding: 30px; border-radius: 20px; width: 100%; max-width: 420px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); transform: scale(0.9); transition: transform 0.2s; box-sizing: border-box; }
         .modal-overlay.active .modal-card { transform: scale(1); }
         .modal-header { font-size: 1.25rem; font-weight: 800; margin-bottom: 25px; text-align: center; color: var(--text); }
         .modal-actions { display: flex; gap: 15px; margin-top: 25px; }
@@ -96,17 +94,30 @@
         .btn-cancel { background: #f0f2f5; color: #666; }
         .btn-save { background: var(--primary); color: white; }
         
-        /* 辅助类 */
+        /* Helpers */
         .view { display: none; opacity: 0; transition: opacity 0.3s; }
         .view.active { display: block; opacity: 1; }
         #loading { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: none; justify-content: center; align-items: center; z-index: 2000; flex-direction: column; gap: 15px; font-weight: bold; color: var(--primary); }
         .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* 操作按钮 */
         .op-btn { padding: 5px 10px; border-radius: 6px; font-size: 12px; border: none; cursor: pointer; font-weight: 600; margin-left: 4px; }
         .btn-edit { background: #e3f2fd; color: #1976d2; }
         .btn-del { background: #ffebee; color: #c62828; }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { padding-bottom: 40px; }
+            .card { padding: 16px; margin-bottom: 15px; }
+            .top-bar { flex-direction: column; align-items: stretch; gap: 15px; border-radius: 16px; padding: 15px; }
+            .user-section { justify-content: space-between; width: 100%; }
+            .unit-pill { width: 100%; justify-content: center; }
+            .form-row { flex-direction: column; align-items: stretch; gap: 15px; }
+            .input-box { width: 100%; }
+            button.primary-btn { width: 100%; }
+            .modal-card { padding: 20px; }
+        }
     </style>
 </head>
 <body>
@@ -114,11 +125,11 @@
 <div id="loading"><div class="spinner"></div><div>数据同步中...</div></div>
 
 <div id="authView" class="view container active">
-    <div style="text-align: center; margin-top: 50px;">
+    <div style="text-align: center; margin-top: 40px;">
         <div style="font-size: 40px; margin-bottom: 10px;">⚖️</div>
         <h1>多节干减重挑战赛</h1>
     </div>
-    <div class="card" style="max-width: 400px; margin: 30px auto;">
+    <div class="card" style="max-width: 400px; margin: 20px auto;">
         <h2 id="authTitle" style="justify-content: center;">登录账号</h2>
         
         <div class="input-box" style="margin-bottom: 18px;">
@@ -157,10 +168,11 @@
 <div id="appView" class="view container">
     <div class="top-bar">
         <div class="user-section">
-            <div class="user-avatar" id="userAvatar">U</div>
-            <div style="display:flex; flex-direction:column;">
-                <span class="user-name" id="displayUsername">User</span>
-                <span style="font-size:11px; color:#999;">已登录</span>
+            <div style="display:flex; align-items:center;">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <div style="display:flex; flex-direction:column; margin-left: 8px;">
+                    <span class="user-name" id="displayUsername">User</span>
+                </div>
             </div>
             <div class="action-group">
                 <button class="icon-btn" onclick="openProfileModal()" title="修改资料">
@@ -195,24 +207,28 @@
 
     <div class="card">
         <h2>🏆 减重英雄榜</h2>
-        <table>
-            <thead><tr><th>排名</th><th>选手</th><th>初始</th><th>最新</th><th>共减重</th></tr></thead>
-            <tbody id="leaderboardBody"></tbody>
-        </table>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>排名</th><th>选手</th><th>初始</th><th>最新</th><th>共减重</th></tr></thead>
+                <tbody id="leaderboardBody"></tbody>
+            </table>
+        </div>
     </div>
 
     <div class="card">
         <h2>📈 趋势图</h2>
-        <div style="height: 320px;"><canvas id="weightChart"></canvas></div>
+        <div style="height: 320px; position: relative;"><canvas id="weightChart"></canvas></div>
     </div>
 
     <div class="card">
         <h2>🗓️ 我的记录</h2>
         <div style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
-            <table>
-                <thead><tr><th>日期时间</th><th>体重 (<span class="unit-text">公斤</span>)</th><th style="text-align:right">操作</th></tr></thead>
-                <tbody id="historyBody"></tbody>
-            </table>
+            <div class="table-wrapper">
+                <table>
+                    <thead><tr><th>日期时间</th><th>体重 (<span class="unit-text">公斤</span>)</th><th style="text-align:right">操作</th></tr></thead>
+                    <tbody id="historyBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -231,8 +247,8 @@
             <input type="password" id="editPass" placeholder="输入新密码">
         </div>
         <div class="input-box" style="margin-bottom: 18px;">
-            <label>初始体重 (<span class="unit-text">公斤</span>)</label>
-            <input type="number" id="editInitialWeight">
+            <label>初始体重 (<span class="unit-text">公斤</span>) - <small>不可修改</small></label>
+            <input type="number" id="editInitialWeight" disabled style="background:#f0f0f0;">
         </div>
         <div class="input-box" style="margin-bottom: 20px;">
             <label>代表色 (灰色表示被占用)</label>
@@ -270,9 +286,10 @@
     const SUPABASE_URL = 'https://sbtqczozpykrchjfhxex.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_RWSYt9ITlZZG3xX-S7obAA_8vwaGOl8'; 
     const PRESET_COLORS = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#34495e', '#16a085'];
-    
-    // 汉化映射
     const UNIT_LABELS = { 'KG': '公斤', 'JIN': '斤' };
+    
+    // 官方开始日期
+    const CHALLENGE_START_DATE = '2026-01-26'; 
     // =========================================
 
     let dbClient = null;
@@ -280,54 +297,43 @@
     let allUsers = {};
     let myChart = null;
     let isRegisterMode = false;
-    
-    // 状态管理
-    let globalUnit = 'KG'; // 内部 Key 仍用英文，显示时映射
+    let globalUnit = 'KG'; 
     let regUnit = 'KG';    
 
     window.onload = async function() {
         if (typeof window.supabase === 'undefined') { alert("无法加载云端组件，请检查网络。"); return; }
         dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
-        const cachedUser = localStorage.getItem('app_user_v3'); // 版本升级清理旧缓存
+        const cachedUser = localStorage.getItem('app_user_v3');
         if (cachedUser) {
             currentUser = JSON.parse(cachedUser);
             loginSuccess(currentUser, false);
         }
         
-        // 默认时间
         document.getElementById('addDateInput').value = dayjs().format('YYYY-MM-DDTHH:mm');
     };
 
     // ================= 认证与逻辑 =================
-
     async function toggleAuthMode() {
         isRegisterMode = !isRegisterMode;
         document.getElementById('registerFields').style.display = isRegisterMode ? 'block' : 'none';
         document.getElementById('authTitle').innerText = isRegisterMode ? '注册新账号' : '登录账号';
         document.getElementById('authBtn').innerText = isRegisterMode ? '立即注册' : '进入挑战';
         document.getElementById('toggleAuthMode').innerText = isRegisterMode ? '已有账号？去登录' : '没有账号？去注册';
-
-        if (isRegisterMode) {
-            await renderColorPalette('colorPalette', 'selectedColor');
-        }
+        if (isRegisterMode) await renderColorPalette('colorPalette', 'selectedColor');
     }
 
     async function renderColorPalette(containerId, inputId, currentOwnColor = null) {
         const container = document.getElementById(containerId);
         container.innerHTML = '<span style="font-size:12px;color:#999">加载中...</span>';
-        
         const { data: users } = await dbClient.from('app_users').select('color');
         const usedColors = users ? users.map(u => u.color) : [];
-        
         container.innerHTML = '';
         PRESET_COLORS.forEach(color => {
             const el = document.createElement('div');
             el.className = 'color-option';
             el.style.backgroundColor = color;
-            
             const isTaken = usedColors.includes(color) && color !== currentOwnColor;
-            
             if (isTaken) {
                 el.classList.add('disabled');
             } else {
@@ -359,25 +365,19 @@
         const user = document.getElementById('loginUser').value.trim();
         const pass = document.getElementById('loginPass').value.trim();
         if (!user || !pass) return alert("请输入用户名和密码");
-
         showLoading(true);
         try {
             if (isRegisterMode) {
                 const color = document.getElementById('selectedColor').value;
                 let initial = parseFloat(document.getElementById('regInitialWeight').value);
-                
                 if (!color) throw new Error("请选择一个代表颜色");
                 if (!initial) throw new Error("请填写初始体重");
-                
-                if (regUnit === 'JIN') initial = initial / 2; // 入库转KG
-
+                if (regUnit === 'JIN') initial = initial / 2;
                 const { data: exist } = await dbClient.from('app_users').select('id').eq('username', user);
                 if (exist && exist.length > 0) throw new Error("该用户名已存在");
-
                 const { data, error } = await dbClient.from('app_users').insert([{
                     username: user, password: pass, color: color, initial_weight: initial
                 }]).select().single();
-
                 if (error) throw error;
                 loginSuccess(data, true);
             } else {
@@ -386,23 +386,16 @@
                 if (error || !data) throw new Error("用户名或密码错误");
                 loginSuccess(data, true);
             }
-        } catch (err) {
-            alert(err.message);
-        } finally {
-            showLoading(false);
-        }
+        } catch (err) { alert(err.message); } finally { showLoading(false); }
     }
 
     function loginSuccess(user, saveToLocal) {
         currentUser = user;
         if (saveToLocal) localStorage.setItem('app_user_v3', JSON.stringify(user));
-        
-        // 更新 UI 头像
         document.getElementById('displayUsername').innerText = user.username;
         const avatar = document.getElementById('userAvatar');
         avatar.innerText = user.username.charAt(0).toUpperCase();
         avatar.style.backgroundColor = user.color || '#3e9cbf';
-
         switchView('appView');
         loadData();
     }
@@ -416,58 +409,44 @@
     }
 
     // ================= 数据管理 =================
-
     async function loadData() {
         showLoading(true);
         try {
             const { data: users } = await dbClient.from('app_users').select('*');
             allUsers = {};
             users.forEach(u => allUsers[u.id] = u);
-
             const { data: records, error } = await dbClient
                 .from('weight_records').select('*').order('record_date', { ascending: true });
-            
             if (error) throw error;
             renderAll(records || []);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            showLoading(false);
-        }
+        } catch (err) { console.error(err); } finally { showLoading(false); }
     }
 
     async function handleAddRecord() {
         const dateStr = document.getElementById('addDateInput').value;
         let weightVal = parseFloat(document.getElementById('addWeightInput').value);
-
         if (!dateStr || !weightVal) return alert("请填写完整");
-        
-        if (globalUnit === 'JIN') weightVal = weightVal / 2; // 转 KG 入库
-
+        if (globalUnit === 'JIN') weightVal = weightVal / 2;
         showLoading(true);
         const { error } = await dbClient.from('weight_records').insert([{
             user_id: currentUser.id, weight: weightVal, record_date: new Date(dateStr).toISOString()
         }]);
-
         if (error) alert("提交失败: " + error.message);
-        else {
-            document.getElementById('addWeightInput').value = '';
-            await loadData();
-        }
+        else { document.getElementById('addWeightInput').value = ''; await loadData(); }
         showLoading(false);
     }
 
-    // ================= 资料修改 (包含用户名修改) =================
-
+    // ================= 资料修改 =================
     async function openProfileModal() {
-        // 1. 回显用户名
         document.getElementById('editUsername').value = currentUser.username;
-        
         document.getElementById('editPass').value = '';
         let displayInitial = currentUser.initial_weight;
         if (globalUnit === 'JIN') displayInitial *= 2;
         
-        document.getElementById('editInitialWeight').value = displayInitial.toFixed(2);
+        const wInput = document.getElementById('editInitialWeight');
+        wInput.value = displayInitial.toFixed(2);
+        wInput.disabled = true; // 确保禁用
+
         await renderColorPalette('editColorPalette', 'editSelectedColor', currentUser.color);
         document.getElementById('profileModal').classList.add('active');
     }
@@ -476,29 +455,23 @@
         const newName = document.getElementById('editUsername').value.trim();
         const pass = document.getElementById('editPass').value;
         const color = document.getElementById('editSelectedColor').value;
-        let initial = parseFloat(document.getElementById('editInitialWeight').value);
+        // 不读取也不更新 initial_weight
 
         if (!newName) return alert("用户名不能为空");
 
         const updates = {};
-
-        // 1. 检查用户名是否变更 (如果变更，需要查重)
         if (newName !== currentUser.username) {
-            showLoading(true); // 查重网络请求
+            showLoading(true);
             const { data: exist } = await dbClient.from('app_users').select('id').eq('username', newName);
             if (exist && exist.length > 0) {
                 showLoading(false);
                 return alert("该用户名已存在，请换一个");
             }
-            updates.username = newName; // 只有不重复才更新
+            updates.username = newName;
         }
 
         if (pass) updates.password = pass;
         if (color) updates.color = color;
-        if (initial) {
-            if (globalUnit === 'JIN') initial /= 2;
-            updates.initial_weight = initial;
-        }
 
         if (Object.keys(updates).length > 0) {
             showLoading(true);
@@ -506,26 +479,17 @@
             if (!error) {
                 currentUser = { ...currentUser, ...updates };
                 localStorage.setItem('app_user_v3', JSON.stringify(currentUser));
-                
-                // 立即更新头像和名字
                 document.getElementById('displayUsername').innerText = currentUser.username;
                 const avatar = document.getElementById('userAvatar');
                 avatar.innerText = currentUser.username.charAt(0).toUpperCase();
                 avatar.style.backgroundColor = currentUser.color;
-                
                 closeModal('profileModal');
                 alert("修改成功！");
                 await loadData();
-            } else {
-                alert("修改失败: " + error.message);
-            }
+            } else { alert("修改失败: " + error.message); }
             showLoading(false);
-        } else {
-            closeModal('profileModal');
-        }
+        } else { closeModal('profileModal'); }
     }
-
-    // ================= 记录修改 =================
 
     function openRecordModal(id, weightKg, dateStr) {
         document.getElementById('editRecordId').value = id;
@@ -539,20 +503,12 @@
         const id = document.getElementById('editRecordId').value;
         const dateStr = document.getElementById('editRecordDate').value;
         let weightVal = parseFloat(document.getElementById('editRecordWeight').value);
-
         if (!dateStr || !weightVal) return alert("不能为空");
         if (globalUnit === 'JIN') weightVal /= 2;
-
         showLoading(true);
         const { error } = await dbClient.from('weight_records')
-            .update({ weight: weightVal, record_date: new Date(dateStr).toISOString() })
-            .eq('id', id);
-
-        if (error) alert("修改失败");
-        else {
-            closeModal('recordModal');
-            await loadData();
-        }
+            .update({ weight: weightVal, record_date: new Date(dateStr).toISOString() }).eq('id', id);
+        if (error) alert("修改失败"); else { closeModal('recordModal'); await loadData(); }
         showLoading(false);
     }
 
@@ -563,42 +519,30 @@
         if (!error) await loadData();
         showLoading(false);
     }
-
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
     // ================= 渲染与单位 =================
-
     function toggleGlobalUnit() {
         globalUnit = globalUnit === 'KG' ? 'JIN' : 'KG';
-        // 1. 更新顶部标签
         document.getElementById('globalUnitLabel').innerText = UNIT_LABELS[globalUnit];
-        // 2. 更新页面所有小标签
         document.querySelectorAll('.unit-text').forEach(el => el.innerText = UNIT_LABELS[globalUnit]);
-        
-        // 3. 转换输入框中已有的数字 (为了体验顺滑)
         const addInput = document.getElementById('addWeightInput');
         if (addInput.value) {
             const val = parseFloat(addInput.value);
             addInput.value = (globalUnit === 'KG' ? val / 2 : val * 2).toFixed(2);
         }
-
-        loadData(); // 重绘所有数据
+        loadData();
     }
-
     function formatW(kg) {
         if (!kg && kg !== 0) return '--';
-        const val = globalUnit === 'KG' ? kg : kg * 2;
-        return val.toFixed(2);
+        return (globalUnit === 'KG' ? kg : kg * 2).toFixed(2);
     }
 
     function renderAll(records) {
         const unitText = UNIT_LABELS[globalUnit];
-
-        // 1. 列表
         const tbody = document.getElementById('historyBody');
         tbody.innerHTML = '';
         const myRecords = records.filter(r => r.user_id === currentUser.id);
-        
         [...myRecords].reverse().forEach(r => {
             tbody.innerHTML += `
                 <tr>
@@ -611,14 +555,12 @@
                 </tr>`;
         });
 
-        // 2. 排行榜
+        // 排行榜：Current取最新，Initial取数据库存的
         const userStats = {};
         Object.values(allUsers).forEach(u => {
             userStats[u.id] = { name: u.username, initial: u.initial_weight, current: u.initial_weight };
         });
-        records.forEach(r => {
-            if (userStats[r.user_id]) userStats[r.user_id].current = r.weight;
-        });
+        records.forEach(r => { if (userStats[r.user_id]) userStats[r.user_id].current = r.weight; });
         const ranking = Object.values(userStats).map(u => ({ ...u, loss: u.initial - u.current }))
             .sort((a, b) => b.loss - a.loss);
 
@@ -638,23 +580,56 @@
                 </tr>`;
         });
 
-        // 3. 图表
+        // === 修正后的图表逻辑 ===
         const ctx = document.getElementById('weightChart').getContext('2d');
-        const rawDates = [...new Set(records.map(r => r.record_date))].sort();
-        const labels = rawDates.map(d => dayjs(d).format('MM-DD'));
         
+        // 1. 获取所有记录的日期
+        let rawDateStrings = records.map(r => dayjs(r.record_date).format('YYYY-MM-DD'));
+        
+        // 2. 将 1月26日 加入日期列表（如果不重复）
+        if (!rawDateStrings.includes(CHALLENGE_START_DATE)) {
+            rawDateStrings.push(CHALLENGE_START_DATE);
+        }
+        
+        // 3. 统一排序（这样 26号之前的日期会排在前面，26号在中间/后面）
+        const uniqueDates = [...new Set(rawDateStrings)].sort();
+        const labels = uniqueDates.map(d => dayjs(d).format('MM-DD'));
+
+        // 4. 判断点位是否是 1月26日
+        const isStartPoint = uniqueDates.map(d => d === CHALLENGE_START_DATE);
+
         const datasets = Object.values(allUsers).map(u => {
             const uRecs = records.filter(r => r.user_id === u.id);
-            const data = rawDates.map(d => {
-                const find = uRecs.find(r => r.record_date === d);
-                return find ? (globalUnit==='KG'?find.weight:find.weight*2) : null;
+            
+            const data = uniqueDates.map(dateStr => {
+                // 核心逻辑：
+                // 如果是 1月26日，无论该日是否有打卡记录，强制使用【初始体重】显示
+                // 这确保了图表上这一天显示的是比赛的“基准值”
+                if (dateStr === CHALLENGE_START_DATE) {
+                    return globalUnit === 'KG' ? u.initial_weight : u.initial_weight * 2;
+                }
+                
+                // 其他日期：查找当日最后一条记录
+                const dailyRecs = uRecs.filter(r => dayjs(r.record_date).format('YYYY-MM-DD') === dateStr);
+                if (dailyRecs.length > 0) {
+                    const lastRecord = dailyRecs[dailyRecs.length - 1];
+                    return globalUnit === 'KG' ? lastRecord.weight : lastRecord.weight * 2;
+                }
+                return null;
             });
+
             return {
                 label: u.username,
                 data: data,
                 borderColor: u.color,
                 backgroundColor: u.color,
-                spanGaps: true, tension: 0.3, pointRadius: 4, pointHoverRadius: 6
+                spanGaps: true,
+                tension: 0.3,
+                // 仅针对 1月26日 那个点进行放大和改变形状
+                pointRadius: isStartPoint.map(isStart => isStart ? 8 : 4),
+                pointHoverRadius: isStartPoint.map(isStart => isStart ? 10 : 6),
+                pointStyle: isStartPoint.map(isStart => isStart ? 'rectRot' : 'circle'), // 菱形突出
+                borderWidth: 2
             };
         });
 
@@ -669,7 +644,12 @@
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' ' + unitText;
+                                let label = context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' ' + unitText;
+                                // Tooltip 提示
+                                if (context.label === '01-26') {
+                                    label += ' (起始体重)';
+                                }
+                                return label;
                             }
                         }
                     }
@@ -683,9 +663,7 @@
         document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
         document.getElementById(id).classList.add('active');
     }
-    function showLoading(show) {
-        document.getElementById('loading').style.display = show ? 'flex' : 'none';
-    }
+    function showLoading(show) { document.getElementById('loading').style.display = show ? 'flex' : 'none'; }
 </script>
 </body>
 </html>
