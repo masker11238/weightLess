@@ -227,7 +227,17 @@
         <h2>🏆 减重英雄榜</h2>
         <div class="table-wrapper">
             <table>
-                <thead><tr><th>排名</th><th>选手</th><th>初始</th><th>最新</th><th>共减重</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>排名</th>
+                        <th>选手</th>
+                        <th>最早记录</th>
+                        <th>持续减重</th>
+                        <th>周期初始（01-26）</th>
+                        <th>最新</th>
+                        <th>周期内减重</th>
+                    </tr>
+                </thead>
                 <tbody id="leaderboardBody"></tbody>
             </table>
         </div>
@@ -555,10 +565,13 @@
         return (globalUnit === 'KG' ? kg : kg * 2).toFixed(2);
     }
 
+    // --- 核心修改：渲染逻辑更新 ---
     function renderAll(records) {
         const unitText = UNIT_LABELS[globalUnit];
         const tbody = document.getElementById('historyBody');
         tbody.innerHTML = '';
+        
+        // 渲染个人历史记录
         const myRecords = records.filter(r => r.user_id === currentUser.id);
         [...myRecords].reverse().forEach(r => {
             tbody.innerHTML += `
@@ -572,31 +585,71 @@
                 </tr>`;
         });
 
-        const userStats = {};
-        Object.values(allUsers).forEach(u => {
-            userStats[u.id] = { name: u.username, initial: u.initial_weight, current: u.initial_weight };
-        });
-        records.forEach(r => { if (userStats[r.user_id]) userStats[r.user_id].current = r.weight; });
-        const ranking = Object.values(userStats).map(u => ({ ...u, loss: u.initial - u.current }))
-            .sort((a, b) => b.loss - a.loss);
+        // 渲染排行榜 (含新逻辑)
+        const ranking = Object.values(allUsers).map(u => {
+            const uRecs = records.filter(r => r.user_id === u.id);
+            
+            // 1. 最新体重
+            const current = uRecs.length > 0 ? uRecs[uRecs.length - 1].weight : u.initial_weight;
+            
+            // 2. 最早记录 (用于持续减重)
+            const earliest = uRecs.length > 0 ? uRecs[0].weight : u.initial_weight;
+
+            // 3. 周期初始 (用于排名)
+            const cycleInitial = u.initial_weight;
+
+            // 4. 计算减重
+            const cycleLoss = cycleInitial - current; // 周期减重 (排名依据)
+            const totalLoss = earliest - current;     // 持续减重 (仅展示)
+
+            return { 
+                ...u, 
+                current, 
+                earliest, 
+                cycleInitial, 
+                cycleLoss, 
+                totalLoss 
+            };
+        }).sort((a, b) => b.cycleLoss - a.cycleLoss); // 依然按周期减重排序
 
         const lbBody = document.getElementById('leaderboardBody');
         lbBody.innerHTML = '';
+        
         ranking.forEach((r, i) => {
-            const color = r.loss > 0 ? '#27ae60' : (r.loss < 0 ? '#c0392b' : '#7f8c8d');
-            const sign = r.loss > 0 ? '-' : '+';
-            const displayLoss = Math.abs(globalUnit === 'KG' ? r.loss : r.loss * 2).toFixed(2);
+            const getLossHtml = (val) => {
+                const color = val > 0 ? '#27ae60' : (val < 0 ? '#c0392b' : '#7f8c8d');
+                const sign = val > 0 ? '-' : '+';
+                const num = Math.abs(globalUnit === 'KG' ? val : val * 2).toFixed(2);
+                return { html: val === 0 ? '--' : `${sign}${num}`, color: color };
+            };
+
+            const cycleStyle = getLossHtml(r.cycleLoss);
+            const totalStyle = getLossHtml(r.totalLoss);
+
             lbBody.innerHTML += `
                 <tr class="rank-${i+1}">
                     <td><span class="rank-badge">${i+1}</span></td>
-                    <td style="font-weight:bold; color:#333">${r.name}</td>
-                    <td>${formatW(r.initial)}</td>
+                    <td style="font-weight:bold; color:#333">${r.username}</td>
+                    
+                    <td style="color:#666">${formatW(r.earliest)}</td>
+                    <td style="color:${totalStyle.color};font-weight:bold">
+                        ${totalStyle.html} <span style="font-size:12px;color:#999;font-weight:normal">${unitText}</span>
+                    </td>
+                    
+                    <td>${formatW(r.cycleInitial)}</td>
                     <td>${formatW(r.current)}</td>
-                    <td style="color:${color};font-weight:bold">${r.loss===0?'--':sign+displayLoss} <span style="font-size:12px;color:#999">${unitText}</span></td>
+                    <td style="color:${cycleStyle.color};font-weight:bold">
+                        ${cycleStyle.html} <span style="font-size:12px;color:#999;font-weight:normal">${unitText}</span>
+                    </td>
                 </tr>`;
         });
 
-        // 图表渲染
+        // 渲染图表
+        renderChart(records);
+    }
+
+    function renderChart(records) {
+        const unitText = UNIT_LABELS[globalUnit];
         const ctx = document.getElementById('weightChart').getContext('2d');
         let rawDateStrings = records.map(r => dayjs(r.record_date).format('YYYY-MM-DD'));
         
